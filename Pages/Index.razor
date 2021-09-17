@@ -70,13 +70,13 @@
 
     private async Task Animate()
     {
-        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
+        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100));
 
         while (await timer.WaitForNextTickAsync())
         {
             if (!_animate) continue;
 
-            Values = Values.Select(v => v - 0.5 + rng.NextDouble()).ToList();
+            Values = Values.Select(v => v + (0.5 - rng.NextDouble()) / 2).ToList();
             StateHasChanged();
         }
     }
