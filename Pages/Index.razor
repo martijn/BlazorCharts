@@ -1,0 +1,89 @@
+﻿@page "/"
+
+<h1>Blazor Line chart demo</h1>
+
+<p>
+    This line chart is rendered as SVG by a Blazor component using Razor syntax. No JavaScript involved.
+    For more information, see the <a href="http://storck.io/">accompanying blog post</a>
+    or <a href="https://github.com/martijn/BlazorCharts">view the source code on GitHub</a>.
+</p>
+
+<section>
+    <h2>Line Chart</h2>
+
+    <p>
+        <button @onclick="Randomize" class="btn btn-primary">Randomize</button>
+        <label><input type="checkbox" @bind="_animate"/> Animate</label>
+    </p>
+
+    <p>
+        <label>
+            Min value
+            <input @bind="Min"/>
+        </label>
+
+        <label>
+            Max value
+            <input @bind="Max"/>
+        </label>
+
+        <label>
+            Number of values
+            <input @bind="Count"/>
+        </label>
+    </p>
+
+    <div>
+        <LineChart Values="@Values" Min="@Min" Max="@Max"/>
+    </div>
+
+    <p>
+        Hint: Click on a point in the chart, then enable animation.
+    </p>
+</section>
+
+<p class="text-muted">
+    © Martijn Storck
+</p>
+
+
+@code
+{
+    readonly Random rng = new();
+    List<double> Values;
+
+    private double Min { get; set; } = -5;
+    private double Max { get; set; } = 5;
+    private int Count { get; set; } = 10;
+
+    private bool _animate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        Randomize();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender) =>
+        firstRender ? Animate() : Task.CompletedTask;
+
+    private async Task Animate()
+    {
+        var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(50));
+
+        while (await timer.WaitForNextTickAsync())
+        {
+            if (!_animate) continue;
+
+            Values = Values.Select(v => v - 0.5 + rng.NextDouble()).ToList();
+            StateHasChanged();
+        }
+    }
+
+    private void Randomize()
+    {
+        Values = Enumerable.Range(1, Count).Select(_ => Min + rng.NextDouble() * (Max + Math.Abs(Min))).ToList();
+    }
+
+}
