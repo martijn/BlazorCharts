@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 @(GraphWidth + 100) @GraphHeight">
+    <g stroke="gray" text-anchor="end">
+        <text x="40" y="@ZeroY">0</text>
+        <text x="40" y="15">@Max</text>
+        <text x="40" y="@GraphHeight" stroke="green">@Min</text>
+        <line x1="50" x2="50" y1="0" y2="@GraphHeight"/>
+        <line x1="50" x2="@(GraphWidth + 50)" y1="@ZeroY" y2="@ZeroY"/>
+    </g>
+
+    <g>
+        <polyline stroke="blue" fill="none" points="@PointList"/>
+    </g>
+
+    @foreach (var (x, y) in Values.Select((value, index) => (index, value)))
+    {
+        <circle cx=@(Xpos(x)) cy=@(Ypos(y)) r="4" fill=@(x == _selectedPoint ? "lightblue" : "black")/>
+        @* Render a transparent circle with a larger radius to provide a proper hitbox *@
+        <circle cx=@(Xpos(x)) cy=@(Ypos(y)) r="20" fill="transparent" @onclick=@(_ => _selectedPoint = x)/>
+    }
+
+    @if (_selectedPoint != null)
+    {
+        <g text-anchor="middle">
+            <text class="outline" x=@(Xpos(_selectedPoint.Value)) y=@(Ypos(Values[_selectedPoint.Value]) + 20)>@SelectedPointInfo</text>
+            <text x=@(Xpos(_selectedPoint.Value)) y=@(Ypos(Values[_selectedPoint.Value]) + 20)>@SelectedPointInfo</text>
+        </g>
+    }
+</svg>
+
+@code {
+
+    [Parameter]
+    public List<double> Values { get; set; } = new();
+
+    [Parameter]
+    public double Max { get; set; }
+
+    [Parameter]
+    public double Min { get; set; }
+
+    private int? _selectedPoint;
+
+    private const double GraphHeight = 300.0;
+    private const double GraphWidth = 500.0;
+
+    private double GraphRange => Math.Abs(Max) + Math.Abs(Min);
+    private double ZeroY => Math.Abs(Max) / GraphRange * GraphHeight;
+
+    private double Xpos(int x)
+    {
+        return 50.0 + x * (GraphWidth / (Values.Count - 1));
+    }
+
+    private double Ypos(double y)
+    {
+        return ZeroY - y * (GraphHeight / GraphRange);
+    }
+
+    // Convert Values to a list of coordinates for the polyline SVG element
+    private string PointList =>
+        string.Join(" ",
+            Values.Select(
+                (y, index) => $"{Xpos(index)},{Ypos(y)}"
+                )
+            );
+
+    private string SelectedPointInfo => $"x={_selectedPoint}, y={Values[_selectedPoint.Value]:0.000}";
+
+}
